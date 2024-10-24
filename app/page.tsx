@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect, MouseEvent } from "react";
+import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import 'chart.js/auto';
 
-var odex = require('odex');
-
-var mouse = 0;
+let mouse = 0;
 
 // ODE Constants
 const g_Na = 120;
@@ -61,7 +59,7 @@ const Line = dynamic(() => import('react-chartjs-2').then((mod) => mod.Line), {
   ssr: true,
 });
 
-var y = [-70, alpha_m(-70) / (alpha_m(-70) + beta_m(-70)), alpha_h(-70) / (alpha_h(-70) + beta_h(-70)), alpha_n(-70) / (alpha_n(-70) + beta_n(-70))]
+let y = [-70, alpha_m(-70) / (alpha_m(-70) + beta_m(-70)), alpha_h(-70) / (alpha_h(-70) + beta_h(-70)), alpha_n(-70) / (alpha_n(-70) + beta_n(-70))]
 
 export default function Home() {
   const dt = 0.01; // Time step in ms
@@ -79,7 +77,7 @@ export default function Home() {
   });
 
   function solveODE() {
-    for(var i = 0; i < 40; i++){
+    for(let i = 0; i < 40; i++){
       const dy = hodgkinHuxley(y, mouse);
       const newY = y.map((val, index) => val + dy[index] * dt);
       y = newY;
@@ -123,7 +121,7 @@ export default function Home() {
     setTimeout(function() {
       solveODE();
 
-      var rawData = chartData["datasets"][0]["data"];
+      let rawData = chartData["datasets"][0]["data"];
       if(rawData.length > 1000){
         rawData.splice(0, 1);
         rawData = rawData.concat(y[0]);
