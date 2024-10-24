@@ -1,101 +1,160 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, MouseEvent } from "react";
+import dynamic from 'next/dynamic';
+import 'chart.js/auto';
+
+var odex = require('odex');
+
+var mouse = 0;
+
+// ODE Constants
+const g_Na = 120;
+const g_K = 36;
+const g_L = 0.3;
+
+const E_Na = 115;
+const E_K = -12;
+const E_L = 10.6;
+
+const C = 1;
+
+function alpha_m(V: number): number {
+  return 0.1 * (25 - V) / (Math.exp((25 - V) / 10) - 1);
+}
+
+function beta_m(V: number): number {
+  return 4 * Math.exp(-V / 18);
+}
+
+function alpha_h(V: number): number {
+  return 0.07 * Math.exp(-V / 20);
+}
+
+function beta_h(V: number): number {
+  return 1 / (Math.exp((30 - V) / 10) + 1);
+}
+
+function alpha_n(V: number): number {
+  return 0.01 * (10 - V) / (Math.exp((10 - V) / 10) - 1);
+}
+
+function beta_n(V: number): number {
+  return 0.125 * Math.exp(-V / 80);
+}
+
+// Function to Calculate Derivatives
+function hodgkinHuxley(y: number[], mouse: number): number[] {
+  const [V, m, h, n] = y;
+
+  // Calculate gating variables
+  const dVdt = (mouse - (g_Na * Math.pow(m, 3) * h * (V - E_Na) + g_K * Math.pow(n, 4) * (V - E_K) + g_L * (V - E_L))) / C;
+  const dmdt = alpha_m(V) * (1 - m) - beta_m(V) * m;
+  const dhdt = alpha_h(V) * (1 - h) - beta_h(V) * h;
+  const dndt = alpha_n(V) * (1 - n) - beta_n(V) * n;
+
+  return [dVdt, dmdt, dhdt, dndt];
+}
+
+
+const Line = dynamic(() => import('react-chartjs-2').then((mod) => mod.Line), {
+  ssr: true,
+});
+
+var y = [-70, alpha_m(-70) / (alpha_m(-70) + beta_m(-70)), alpha_h(-70) / (alpha_h(-70) + beta_h(-70)), alpha_n(-70) / (alpha_n(-70) + beta_n(-70))]
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const dt = 0.01; // Time step in ms
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [chartData, setChartData] = useState({
+    labels: [1],
+    datasets: [
+      {
+        data: [1],
+        fill: false,
+        borderColor: 'rgb(150, 150, 150)',
+        tension: 0.1,
+      },
+    ],
+  });
+
+  function solveODE() {
+    for(var i = 0; i < 40; i++){
+      const dy = hodgkinHuxley(y, mouse);
+      const newY = y.map((val, index) => val + dy[index] * dt);
+      y = newY;
+    }
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    const { clientY } = e;
+    const windowHeight = window.innerHeight;
+    const current = Math.max(0, (1 - (clientY / (windowHeight / 2))) * 40); // Scale current with higher sensitivity, 0 at middle or below
+    mouse = current;
+  };
+
+  const options = {
+    scales: {
+      x: {
+        display: false,
+      },
+      y: {
+        display: false,
+        min: -50,
+        max: 120
+      },
+    },
+    plugins: {
+      legend: {
+          display: false
+      },
+    },
+    elements: {
+      point: {
+        radius: 0 // Set the radius of the points to 0 to hide them
+      }
+    },
+    animation: {
+      duration: 0
+    },
+  };
+
+  useEffect(() => {
+    setTimeout(function() {
+      solveODE();
+
+      var rawData = chartData["datasets"][0]["data"];
+      if(rawData.length > 1000){
+        rawData.splice(0, 1);
+        rawData = rawData.concat(y[0]);
+      }
+      else{
+        rawData = rawData.concat(y[0]);
+      }
+
+      setChartData({
+        labels: rawData,
+        datasets: [
+          {
+            data: rawData,
+            fill: false,
+            borderColor: 'rgba(150, 150, 150, 0.15)',
+            tension: 0.5,
+          },
+        ],
+      });
+    }, 0.01);
+  }, [chartData, setChartData]);
+
+  return (
+    <div onMouseMove={onMouseMove} className="content-center h-screen w-screen">
+      <main className="content-center h-screen w-screen">
+        <div className="h-screen w-screen">
+          <h1 className="absolute text-center content-center text-7xl z-10 w-screen h-screen --font-geist-mono text-white text-opacity-80">AXONIC</h1>
+          <Line data={chartData} options={options} className="absolute z-0 h-screen pt-[10%]"/>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
+
