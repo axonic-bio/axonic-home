@@ -11,7 +11,7 @@
   "dependencies": {
     "@react-hook/mouse-position": "^4.1.3",
     "chart.js": "^4.4.2",
-    "next": "15.0.0",
+    "next": "15.0.7",
     "odex": "github:littleredcomputer/odex-js",
     "react": "^18",
     "react-chartjs-2": "^5.2.0",
