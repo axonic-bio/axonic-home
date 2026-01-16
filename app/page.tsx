@@ -70,7 +70,7 @@ export default function Home() {
       {
         data: [1],
         fill: false,
-        borderColor: 'rgb(150, 150, 150)',
+        borderColor: 'rgba(255, 255, 255, 0.5)',
         tension: 0.1,
       },
     ],
@@ -136,7 +136,7 @@ export default function Home() {
           {
             data: rawData,
             fill: false,
-            borderColor: 'rgba(150, 150, 150, 0.15)',
+            borderColor: 'rgba(255, 255, 255, 0.5)',
             tension: 0.5,
           },
         ],
@@ -148,8 +148,24 @@ export default function Home() {
     <div onMouseMove={onMouseMove} className="content-center h-screen w-screen">
       <main className="content-center h-screen w-screen">
         <div className="h-screen w-screen">
-          <h1 className="absolute text-center content-center text-7xl z-10 w-screen h-screen --font-geist-mono text-gray-800 text-opacity-50 dark:text-white dark:text-opacity-80">AXONIC</h1>
-          <Line data={chartData} options={options} className="absolute z-0 h-screen pt-[10%]"/>
+          <div className="absolute z-0 w-screen h-[50%] top-0 flex flex-col items-center justify-center">
+            <h1 className="text-9xl font-[family-name:var(--font-eb-garamond)] text-white z-10">CAPABLE</h1>
+                        <Line data={chartData} options={options} className="absolute w-full h-full"/>
+          </div>
+          <div className="absolute text-center z-10 w-screen top-[55%]">
+            <p className="mt-8 text-3xl font-[family-name:var(--font-eb-garamond)] text-white max-w-xl mx-auto">
+              A San Francisco based rapid-iteration deep tech chemistry platform.
+            </p>
+            <p className="mt-6 text-3xl font-[family-name:var(--font-eb-garamond)] text-white">
+              First milestone: sleep therapeutics.
+            </p>
+            <p className="mt-6 text-3xl font-[family-name:var(--font-eb-garamond)] text-white">
+              More soon.
+            </p>
+                        </div>
+          <p className="absolute bottom-6 left-6 text-lg font-[family-name:var(--font-eb-garamond)] text-white">
+            1 Corporate Drive, South San Francisco, CA 94080
+          </p>
         </div>
       </main>
     </div>
