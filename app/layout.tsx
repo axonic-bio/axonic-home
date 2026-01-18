@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { EB_Garamond } from "next/font/google";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -13,9 +14,14 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+const ebGaramond = EB_Garamond({
+  subsets: ["latin"],
+  variable: "--font-eb-garamond",
+});
+
 export const metadata: Metadata = {
-  title: "Axonic",
-  description: "Enabling humans to do more.",
+  title: "Capable",
+  description: "The Human Capabilities Lab",
 };
 
 
@@ -28,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} antialiased`}
       >
         {children}
       </body>
